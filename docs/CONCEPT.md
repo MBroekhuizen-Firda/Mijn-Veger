@@ -1,0 +1,14 @@
+New version of the classic Minesweeper game. 
+- Made in Unity URP
+- The game is in 3D. 
+- Tiles are 1m x 1m. 
+- The playing area is generated based on player settings
+- Game area can vary between 10x10m to 100x100m
+- A character is spawned on a random tile on the left edge of area
+- A goal tile is spawned on a random tile on the right edge of area
+- Player must reach goal. There should always be atleast one path to goal (mine-free).
+- Player can flag tiles as in minesweeper, but only tiles that are adjacent to player (including diagonals)
+- Clicking a tile will make the character walk there. 
+    - If the character reaches the tile and it is a mine, player dies.
+    - If the tile is clear, all adjacent clear tiles are also cleared.
+    - Numbers on tiles show the number of adjacent mines, like in the classic game.
