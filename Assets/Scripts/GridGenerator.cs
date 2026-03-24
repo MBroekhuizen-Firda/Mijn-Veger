@@ -417,6 +417,57 @@ public class GridGenerator : MonoBehaviour
         return Mathf.Abs(a.x - b.x) <= 1 && Mathf.Abs(a.y - b.y) <= 1 && a != b;
     }
 
+    /// <summary>
+    /// BFS pathfinding that only traverses revealed, non-flagged, non-mine tiles.
+    /// Returns the path as a list of grid positions (excluding the start, including the destination).
+    /// Returns null if no valid path exists.
+    /// </summary>
+    public List<Vector2Int> FindRevealedPath(Vector2Int from, Vector2Int to)
+    {
+        if (!IsInBounds(from) || !IsInBounds(to)) return null;
+
+        bool[,] visited = new bool[width, height];
+        Dictionary<Vector2Int, Vector2Int> cameFrom = new Dictionary<Vector2Int, Vector2Int>();
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+
+        queue.Enqueue(from);
+        visited[from.x, from.y] = true;
+
+        bool found = false;
+        while (queue.Count > 0)
+        {
+            Vector2Int current = queue.Dequeue();
+            if (current == to) { found = true; break; }
+
+            foreach (Vector2Int dir in Directions)
+            {
+                Vector2Int next = current + dir;
+                if (!IsInBounds(next) || visited[next.x, next.y]) continue;
+
+                Tile tile = Grid[next.x, next.y];
+                // Only traverse revealed, non-flagged, safe tiles
+                if (!tile.IsRevealed || tile.IsFlagged || tile.IsMine) continue;
+
+                visited[next.x, next.y] = true;
+                cameFrom[next] = current;
+                queue.Enqueue(next);
+            }
+        }
+
+        if (!found) return null;
+
+        // Reconstruct path (excluding start, including destination)
+        List<Vector2Int> path = new List<Vector2Int>();
+        Vector2Int step = to;
+        while (step != from)
+        {
+            path.Add(step);
+            step = cameFrom[step];
+        }
+        path.Reverse();
+        return path;
+    }
+
     public Vector3 GridToWorldPosition(int x, int y)
     {
         return new Vector3(x, 0f, y);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,6 +14,8 @@ public class CharacterMover : MonoBehaviour
     private NavMeshAgent agent;
     private CharacterAnimator characterAnimator;
     private bool isMoving;
+    private List<Vector3> waypoints;
+    private int currentWaypointIndex;
 
     void Awake()
     {
@@ -33,10 +36,21 @@ public class CharacterMover : MonoBehaviour
         {
             if (agent.remainingDistance <= agent.stoppingDistance)
             {
-                isMoving = false;
-                if (characterAnimator != null)
-                    characterAnimator.SetSpeed(0f);
-                OnArrived?.Invoke();
+                // Check if there are more waypoints to follow
+                if (waypoints != null && currentWaypointIndex < waypoints.Count - 1)
+                {
+                    currentWaypointIndex++;
+                    agent.SetDestination(waypoints[currentWaypointIndex]);
+                }
+                else
+                {
+                    isMoving = false;
+                    waypoints = null;
+                    currentWaypointIndex = 0;
+                    if (characterAnimator != null)
+                        characterAnimator.SetSpeed(0f);
+                    OnArrived?.Invoke();
+                }
             }
         }
     }
@@ -45,7 +59,24 @@ public class CharacterMover : MonoBehaviour
     {
         if (agent == null) return;
 
+        waypoints = null;
+        currentWaypointIndex = 0;
         agent.SetDestination(targetPosition);
+        isMoving = true;
+
+        if (characterAnimator != null)
+            characterAnimator.SetSpeed(1f);
+
+        OnStartedMoving?.Invoke();
+    }
+
+    public void MoveAlongPath(List<Vector3> path)
+    {
+        if (agent == null || path == null || path.Count == 0) return;
+
+        waypoints = path;
+        currentWaypointIndex = 0;
+        agent.SetDestination(waypoints[0]);
         isMoving = true;
 
         if (characterAnimator != null)
@@ -66,6 +97,8 @@ public class CharacterMover : MonoBehaviour
             agent.ResetPath();
         }
         isMoving = false;
+        waypoints = null;
+        currentWaypointIndex = 0;
         if (characterAnimator != null)
             characterAnimator.SetSpeed(0f);
     }
