@@ -70,9 +70,23 @@ public class GridGenerator : MonoBehaviour
                 tile.RevealedMaterial = RevealedMaterial;
                 tile.FlaggedMaterial = FlaggedMaterial;
                 tile.GoalMaterial = GoalMaterial;
-                tile.FlagPrefab = FlagPrefab;
-
                 Grid[x, y] = tile;
+            }
+        }
+
+        // Pre-spawn flag visuals on every tile (disabled); toggled via SetActive
+        if (FlagPrefab != null)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Tile tile = Grid[x, y];
+                    GameObject flagObj = Instantiate(FlagPrefab, tile.transform);
+                    flagObj.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+                    flagObj.SetActive(false);
+                    tile.FlagVisual = flagObj;
+                }
             }
         }
 
