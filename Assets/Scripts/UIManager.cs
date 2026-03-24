@@ -1,80 +1,102 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+using UnityEngine.UIElements;
 
 public class UIManager : MonoBehaviour
 {
-    [Header("Panels")]
-    public GameObject SetupPanel;
-    public GameObject HUDPanel;
-    public GameObject GameOverPanel;
-    public GameObject WinPanel;
+    [Header("UI Document")]
+    public UIDocument UIDocument;
 
-    [Header("Setup Screen")]
-    public Slider WidthSlider;
-    public Slider HeightSlider;
-    public TextMeshProUGUI WidthLabel;
-    public TextMeshProUGUI HeightLabel;
-    public Button StartButton;
+    VisualElement root;
 
-    [Header("HUD")]
-    public TextMeshProUGUI MineCountText;
-    public TextMeshProUGUI FlagCountText;
+    // Panels
+    VisualElement setupPanel;
+    VisualElement hudPanel;
+    VisualElement gameOverPanel;
+    VisualElement winPanel;
 
-    [Header("Game Over")]
-    public Button RetryButton;
+    // Setup elements
+    SliderInt widthSlider;
+    SliderInt heightSlider;
+    Label widthLabel;
+    Label heightLabel;
+    Button startButton;
 
-    [Header("Win")]
-    public Button PlayAgainButton;
+    // HUD elements
+    Label mineCountText;
+    Label flagCountText;
 
-    void Start()
+    // Overlay buttons
+    Button retryButton;
+    Button playAgainButton;
+
+    void OnEnable()
     {
-        // Setup slider listeners
-        if (WidthSlider != null)
-        {
-            WidthSlider.minValue = 10;
-            WidthSlider.maxValue = 100;
-            WidthSlider.wholeNumbers = true;
-            WidthSlider.value = 10;
-            WidthSlider.onValueChanged.AddListener(OnWidthChanged);
-            OnWidthChanged(WidthSlider.value);
-        }
+        if (UIDocument == null)
+            UIDocument = GetComponent<UIDocument>();
 
-        if (HeightSlider != null)
-        {
-            HeightSlider.minValue = 10;
-            HeightSlider.maxValue = 100;
-            HeightSlider.wholeNumbers = true;
-            HeightSlider.value = 10;
-            HeightSlider.onValueChanged.AddListener(OnHeightChanged);
-            OnHeightChanged(HeightSlider.value);
-        }
+        root = UIDocument.rootVisualElement;
 
-        // Setup button listeners
-        if (StartButton != null)
-            StartButton.onClick.AddListener(OnStartClicked);
+        // Query panels
+        setupPanel = root.Q<VisualElement>("setup-panel");
+        hudPanel = root.Q<VisualElement>("hud-panel");
+        gameOverPanel = root.Q<VisualElement>("gameover-panel");
+        winPanel = root.Q<VisualElement>("win-panel");
 
-        if (RetryButton != null)
-            RetryButton.onClick.AddListener(OnRetryClicked);
+        // Query setup elements
+        widthSlider = root.Q<SliderInt>("width-slider");
+        heightSlider = root.Q<SliderInt>("height-slider");
+        widthLabel = root.Q<Label>("width-label");
+        heightLabel = root.Q<Label>("height-label");
+        startButton = root.Q<Button>("start-button");
 
-        if (PlayAgainButton != null)
-            PlayAgainButton.onClick.AddListener(OnRetryClicked);
+        // Query HUD elements
+        mineCountText = root.Q<Label>("mine-count");
+        flagCountText = root.Q<Label>("flag-count");
+
+        // Query overlay buttons
+        retryButton = root.Q<Button>("retry-button");
+        playAgainButton = root.Q<Button>("playagain-button");
+
+        // Register callbacks
+        widthSlider.RegisterValueChangedCallback(OnWidthChanged);
+        heightSlider.RegisterValueChangedCallback(OnHeightChanged);
+        startButton.clicked += OnStartClicked;
+        retryButton.clicked += OnRetryClicked;
+        playAgainButton.clicked += OnRetryClicked;
+
+        // Initialize labels
+        OnWidthChanged(null);
+        OnHeightChanged(null);
     }
 
-    void OnWidthChanged(float value)
+    void OnDisable()
     {
-        if (WidthLabel != null)
-            WidthLabel.text = $"Width: {(int)value}";
-        if (GameManager.Instance != null)
-            GameManager.Instance.GridWidth = (int)value;
+        if (widthSlider != null)
+            widthSlider.UnregisterValueChangedCallback(OnWidthChanged);
+        if (heightSlider != null)
+            heightSlider.UnregisterValueChangedCallback(OnHeightChanged);
+        if (startButton != null)
+            startButton.clicked -= OnStartClicked;
+        if (retryButton != null)
+            retryButton.clicked -= OnRetryClicked;
+        if (playAgainButton != null)
+            playAgainButton.clicked -= OnRetryClicked;
     }
 
-    void OnHeightChanged(float value)
+    void OnWidthChanged(ChangeEvent<int> evt)
     {
-        if (HeightLabel != null)
-            HeightLabel.text = $"Height: {(int)value}";
+        int value = widthSlider.value;
+        widthLabel.text = $"Width: {value}";
         if (GameManager.Instance != null)
-            GameManager.Instance.GridHeight = (int)value;
+            GameManager.Instance.GridWidth = value;
+    }
+
+    void OnHeightChanged(ChangeEvent<int> evt)
+    {
+        int value = heightSlider.value;
+        heightLabel.text = $"Height: {value}";
+        if (GameManager.Instance != null)
+            GameManager.Instance.GridHeight = value;
     }
 
     void OnStartClicked()
@@ -91,45 +113,54 @@ public class UIManager : MonoBehaviour
 
     public void ShowSetupScreen()
     {
-        SetAllPanelsInactive();
-        if (SetupPanel != null) SetupPanel.SetActive(true);
+        HideAllPanels();
+        Show(setupPanel);
     }
 
     public void ShowHUD()
     {
-        SetAllPanelsInactive();
-        if (HUDPanel != null) HUDPanel.SetActive(true);
+        HideAllPanels();
+        Show(hudPanel);
         UpdateHUD();
     }
 
     public void ShowGameOverScreen()
     {
-        if (HUDPanel != null) HUDPanel.SetActive(false);
-        if (GameOverPanel != null) GameOverPanel.SetActive(true);
+        Hide(hudPanel);
+        Show(gameOverPanel);
     }
 
     public void ShowWinScreen()
     {
-        if (HUDPanel != null) HUDPanel.SetActive(false);
-        if (WinPanel != null) WinPanel.SetActive(true);
+        Hide(hudPanel);
+        Show(winPanel);
     }
 
     public void UpdateHUD()
     {
         if (GameManager.Instance == null) return;
 
-        if (MineCountText != null)
-            MineCountText.text = $"Mines: {GameManager.Instance.TotalMines}";
-
-        if (FlagCountText != null)
-            FlagCountText.text = $"Flags: {GameManager.Instance.FlagsPlaced}";
+        mineCountText.text = $"Mines: {GameManager.Instance.TotalMines}";
+        flagCountText.text = $"Flags: {GameManager.Instance.FlagsPlaced}";
     }
 
-    void SetAllPanelsInactive()
+    void HideAllPanels()
     {
-        if (SetupPanel != null) SetupPanel.SetActive(false);
-        if (HUDPanel != null) HUDPanel.SetActive(false);
-        if (GameOverPanel != null) GameOverPanel.SetActive(false);
-        if (WinPanel != null) WinPanel.SetActive(false);
+        Hide(setupPanel);
+        Hide(hudPanel);
+        Hide(gameOverPanel);
+        Hide(winPanel);
+    }
+
+    void Show(VisualElement element)
+    {
+        if (element != null)
+            element.style.display = DisplayStyle.Flex;
+    }
+
+    void Hide(VisualElement element)
+    {
+        if (element != null)
+            element.style.display = DisplayStyle.None;
     }
 }

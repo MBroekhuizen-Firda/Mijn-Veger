@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+
+    <ui:Template name="GameUI" />
+
+    <Style src="GameUI.uss" />
+
+    <!-- Setup Panel -->
+    <ui:VisualElement name="setup-panel" class="panel center-panel">
+        <ui:Label text="Mijn Veger" class="title" />
+        <ui:VisualElement class="settings-group">
+            <ui:VisualElement class="slider-row">
+                <ui:Label name="width-label" text="Width: 10" class="slider-label" />
+                <ui:SliderInt name="width-slider" low-value="10" high-value="100" value="10" class="game-slider" />
+            </ui:VisualElement>
+            <ui:VisualElement class="slider-row">
+                <ui:Label name="height-label" text="Height: 10" class="slider-label" />
+                <ui:SliderInt name="height-slider" low-value="10" high-value="100" value="10" class="game-slider" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Button name="start-button" text="Start Game" class="action-button" />
+    </ui:VisualElement>
+
+    <!-- HUD Panel -->
+    <ui:VisualElement name="hud-panel" class="panel hud">
+        <ui:VisualElement class="hud-bar">
+            <ui:Label name="mine-count" text="Mines: 0" class="hud-text" />
+            <ui:Label name="flag-count" text="Flags: 0" class="hud-text" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- Game Over Panel -->
+    <ui:VisualElement name="gameover-panel" class="panel center-panel overlay">
+        <ui:Label text="Game Over" class="title gameover-title" />
+        <ui:Button name="retry-button" text="Retry" class="action-button" />
+    </ui:VisualElement>
+
+    <!-- Win Panel -->
+    <ui:VisualElement name="win-panel" class="panel center-panel overlay">
+        <ui:Label text="You Win!" class="title win-title" />
+        <ui:Button name="playagain-button" text="Play Again" class="action-button" />
+    </ui:VisualElement>
+
+</ui:UXML>
