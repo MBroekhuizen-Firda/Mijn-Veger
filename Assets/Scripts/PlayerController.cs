@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -60,21 +61,44 @@ public class PlayerController : MonoBehaviour
     {
         Tile tile = RaycastToTile();
         if (tile == null) return;
-        if (tile.IsRevealed || tile.IsFlagged) return;
+        if (tile.IsFlagged) return;
 
-        // Only allow movement to adjacent tiles
         GridGenerator generator = GameManager.Instance.GridGenerator;
         Tile playerTile = generator.GetTileAtWorldPosition(CharacterMover.transform.position);
         if (playerTile == null) return;
-        if (!generator.IsAdjacent(playerTile.GridPosition, tile.GridPosition)) return;
+        if (playerTile.GridPosition == tile.GridPosition) return;
 
-        // Move character to the tile
-        currentTile = tile;
-        waitingForArrival = true;
+        if (!tile.IsRevealed)
+        {
+            // Unrevealed tiles can only be reached if adjacent to the player
+            if (!generator.IsAdjacent(playerTile.GridPosition, tile.GridPosition)) return;
 
-        Vector3 targetPos = generator.GridToWorldPosition(
-            tile.GridPosition.x, tile.GridPosition.y);
-        CharacterMover.MoveTo(targetPos);
+            // Move directly to the adjacent unrevealed tile
+            currentTile = tile;
+            waitingForArrival = true;
+
+            Vector3 targetPos = generator.GridToWorldPosition(
+                tile.GridPosition.x, tile.GridPosition.y);
+            CharacterMover.MoveTo(targetPos);
+        }
+        else
+        {
+            // Revealed tile: find a path through revealed, non-flagged tiles
+            List<Vector2Int> path = generator.FindRevealedPath(
+                playerTile.GridPosition, tile.GridPosition);
+            if (path == null || path.Count == 0) return;
+
+            // Convert grid path to world waypoints
+            List<Vector3> waypoints = new List<Vector3>();
+            foreach (Vector2Int pos in path)
+            {
+                waypoints.Add(generator.GridToWorldPosition(pos.x, pos.y));
+            }
+
+            currentTile = tile;
+            waitingForArrival = true;
+            CharacterMover.MoveAlongPath(waypoints);
+        }
     }
 
     void HandleRightClick()
