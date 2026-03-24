@@ -69,7 +69,7 @@ public class CameraController : MonoBehaviour
 
         // Adjust height based on grid size
         float maxDimension = Mathf.Max(gridWidth, gridHeight);
-        TopDownHeight = maxDimension * 0.75f;
+        TopDownHeight = maxDimension * 1.15f;
 
         SetMode(CameraMode.TopDown);
     }
