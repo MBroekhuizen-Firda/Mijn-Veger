@@ -147,25 +147,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b1da80426025be84d86730cf399bbbaf, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  UIDocument: {fileID: 264064890}
---- !u!114 &264064890
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 264064887}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name:
-  m_EditorClassIdentifier:
-  m_PanelSettings: {fileID: 11400000, guid: e5d4c3b2a1908172635445362718face, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: -8516324367082592513, guid: f0e1d2c3b4a5968778695a4b3c2d1e0f, type: 3}
-  m_SortingOrder: 0
+  UIDocument: {fileID: 0}
 --- !u!4 &264064889
 Transform:
   m_ObjectHideFlags: 0
@@ -181,6 +165,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &264064890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 264064887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: e5d4c3b2a1908172635445362718face, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: -8516324367082592513, guid: f0e1d2c3b4a5968778695a4b3c2d1e0f, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -579,7 +586,7 @@ MonoBehaviour:
   MainCamera: {fileID: 330585545}
   TileLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
 --- !u!4 &961288431
 Transform:
   m_ObjectHideFlags: 0
@@ -625,7 +632,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   Target: {fileID: 0}
-  MainCamera: {fileID: 0}
+  MainCamera: {fileID: 330585545}
   TopDownHeight: 20
   TopDownAngle: 90
   FollowDistance: 5

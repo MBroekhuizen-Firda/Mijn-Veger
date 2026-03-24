@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 1901790709663401566}
   - component: {fileID: 7738496843272030809}
   - component: {fileID: 5784956186186753441}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: TilePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -313,11 +313,11 @@ MonoBehaviour:
   IsGoal: 0
   AdjacentMineCount: 0
   GridPosition: {x: 0, y: 0}
-  HiddenVisual: {fileID: 0}
-  RevealedVisual: {fileID: 0}
   FlagVisual: {fileID: 3835681812306926334, guid: 70b07f85c7b92644ab434b1f67e1dd00, type: 3}
   GoalVisual: {fileID: 0}
   MineSlot: {fileID: 0}
   NumberText: {fileID: 3953291881960021931}
   HiddenMaterial: {fileID: 0}
   RevealedMaterial: {fileID: 0}
+  FlaggedMaterial: {fileID: 0}
+  GoalMaterial: {fileID: 0}
