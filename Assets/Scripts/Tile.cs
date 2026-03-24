@@ -11,6 +11,9 @@ public class Tile : MonoBehaviour
     public int AdjacentMineCount;
     public Vector2Int GridPosition;
 
+    [Header("Prefabs")]
+    public GameObject FlagPrefab;
+
     [Header("Visual References")]
     public GameObject FlagVisual;
     public GameObject GoalVisual;
@@ -122,6 +125,19 @@ public class Tile : MonoBehaviour
         if (IsRevealed) return;
 
         IsFlagged = !IsFlagged;
+
+        // Instantiate / destroy the flag visual dynamically
+        if (IsFlagged && FlagVisual == null && FlagPrefab != null)
+        {
+            FlagVisual = Instantiate(FlagPrefab, transform);
+            FlagVisual.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+        }
+        else if (!IsFlagged && FlagVisual != null)
+        {
+            Destroy(FlagVisual);
+            FlagVisual = null;
+        }
+
         ApplyVisuals();
         GameManager.Instance.OnFlagChanged(IsFlagged ? 1 : -1);
     }
@@ -155,6 +171,12 @@ public class Tile : MonoBehaviour
         }
     }
 
+    // Called by GridGenerator after all materials and state are fully initialized
+    void RefreshVisuals()
+    {
+        ApplyVisuals();
+    }
+
     public void ResetTile()
     {
         IsMine = false;
@@ -162,6 +184,10 @@ public class Tile : MonoBehaviour
         IsFlagged = false;
         IsGoal = false;
         AdjacentMineCount = 0;
+
+        if (FlagVisual != null) { Destroy(FlagVisual); FlagVisual = null; }
+        if (GoalVisual != null) { Destroy(GoalVisual); GoalVisual = null; }
+
         ApplyVisuals();
     }
 }

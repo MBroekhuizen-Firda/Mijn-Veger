@@ -9,10 +9,14 @@ public class GridGenerator : MonoBehaviour
     public GameObject TilePrefab;
     public GameObject MinePrefab;
     public GameObject CharacterPrefab;
+    public GameObject FlagPrefab;
+    public GameObject GoalPrefab;
 
     [Header("Materials")]
     public Material HiddenMaterial;
     public Material RevealedMaterial;
+    public Material FlaggedMaterial;
+    public Material GoalMaterial;
 
     [Header("Runtime")]
     public Tile[,] Grid { get; private set; }
@@ -41,6 +45,16 @@ public class GridGenerator : MonoBehaviour
         Grid = new Tile[width, height];
         gridParent = new GameObject("Grid");
 
+        // Ensure fallback materials exist so tiles are always distinguishable
+        if (HiddenMaterial == null)
+            HiddenMaterial = CreateColorMaterial(new Color(0.35f, 0.45f, 0.7f));
+        if (RevealedMaterial == null)
+            RevealedMaterial = CreateColorMaterial(new Color(0.78f, 0.75f, 0.55f));
+        if (FlaggedMaterial == null)
+            FlaggedMaterial = CreateColorMaterial(new Color(1f, 0.55f, 0.1f));
+        if (GoalMaterial == null)
+            GoalMaterial = CreateColorMaterial(new Color(0.1f, 0.9f, 0.2f));
+
         // Create tiles
         for (int x = 0; x < width; x++)
         {
@@ -54,6 +68,9 @@ public class GridGenerator : MonoBehaviour
                 tile.GridPosition = new Vector2Int(x, y);
                 tile.HiddenMaterial = HiddenMaterial;
                 tile.RevealedMaterial = RevealedMaterial;
+                tile.FlaggedMaterial = FlaggedMaterial;
+                tile.GoalMaterial = GoalMaterial;
+                tile.FlagPrefab = FlagPrefab;
 
                 Grid[x, y] = tile;
             }
@@ -62,7 +79,16 @@ public class GridGenerator : MonoBehaviour
         // Pick start and goal positions
         StartPosition = new Vector2Int(0, Random.Range(0, height));
         GoalPosition = new Vector2Int(width - 1, Random.Range(0, height));
-        Grid[GoalPosition.x, GoalPosition.y].IsGoal = true;
+        Tile goalTile = Grid[GoalPosition.x, GoalPosition.y];
+        goalTile.IsGoal = true;
+
+        // Instantiate the goal visual on the goal tile
+        if (GoalPrefab != null)
+        {
+            GameObject goalObj = Instantiate(GoalPrefab, goalTile.transform);
+            goalObj.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+            goalTile.GoalVisual = goalObj;
+        }
 
         // Place mines
         PlaceMines(mineCount);
@@ -75,6 +101,12 @@ public class GridGenerator : MonoBehaviour
 
         // Set up mine prefabs on mine tiles
         SetupMinePrefabs();
+
+        // Refresh visuals on all tiles now that materials and state are fully set
+        // (Awake ran before materials were assigned, so we need a second pass)
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                Grid[x, y].SendMessage("RefreshVisuals", SendMessageOptions.DontRequireReceiver);
 
         // Reveal the start tile
         Grid[StartPosition.x, StartPosition.y].Reveal();
@@ -466,6 +498,15 @@ public class GridGenerator : MonoBehaviour
         }
         path.Reverse();
         return path;
+    }
+
+    Material CreateColorMaterial(Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("Standard");
+        Material mat = new Material(shader);
+        mat.color = color;
+        return mat;
     }
 
     public Vector3 GridToWorldPosition(int x, int y)
