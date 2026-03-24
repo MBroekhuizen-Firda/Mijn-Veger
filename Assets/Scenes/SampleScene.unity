@@ -765,8 +765,12 @@ MonoBehaviour:
   TilePrefab: {fileID: 6059805326102143792, guid: 292392b9ccac85842893d5cf32c5fe7d, type: 3}
   MinePrefab: {fileID: 4785323586662462510, guid: 64bec95d2f85ede44b483d86b13ddf10, type: 3}
   CharacterPrefab: {fileID: 7408309709596509291, guid: f78f7200e32e2f848ac81add7eb1e59c, type: 3}
-  HiddenMaterial: {fileID: 0}
-  RevealedMaterial: {fileID: 0}
+  FlagPrefab: {fileID: 3835681812306926334, guid: 70b07f85c7b92644ab434b1f67e1dd00, type: 3}
+  GoalPrefab: {fileID: 6862177396051774472, guid: 50b14de1180977a4ba46765c0d6ca857, type: 3}
+  HiddenMaterial: {fileID: 2100000, guid: 9299e6bb2cc064f479eaef522a8e2efb, type: 2}
+  RevealedMaterial: {fileID: 2100000, guid: 48f68f4a4c474e74eab2aef0889011f0, type: 2}
+  FlaggedMaterial: {fileID: 2100000, guid: b326ddb62870acd4c8475b2d7ba7f3f3, type: 2}
+  GoalMaterial: {fileID: 2100000, guid: f1e15a0e4b948194c933fafa908505d4, type: 2}
 --- !u!4 &1544334371
 Transform:
   m_ObjectHideFlags: 0

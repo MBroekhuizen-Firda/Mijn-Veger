@@ -211,7 +211,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.2, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6089389189240397096}
@@ -313,6 +313,7 @@ MonoBehaviour:
   IsGoal: 0
   AdjacentMineCount: 0
   GridPosition: {x: 0, y: 0}
+  FlagPrefab: {fileID: 0}
   FlagVisual: {fileID: 3835681812306926334, guid: 70b07f85c7b92644ab434b1f67e1dd00, type: 3}
   GoalVisual: {fileID: 6862177396051774472, guid: 50b14de1180977a4ba46765c0d6ca857, type: 3}
   MineSlot: {fileID: 4785323586662462510, guid: 64bec95d2f85ede44b483d86b13ddf10, type: 3}
