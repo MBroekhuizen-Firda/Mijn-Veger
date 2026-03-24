@@ -26,31 +26,9 @@ Full concept specification: [`docs/CONCEPT.md`](docs/CONCEPT.md)
 
 ---
 
-## Current State of the Repository
-
-### What exists
-
-| Path | Description |
-|------|-------------|
-| `Assets/Character/` | Character FBX models (`IdleSkinned.fbx`, `Walk.fbx`, `Die.fbx`), textures, materials, `AnimatorController.controller` |
-| `Assets/Mine/MijnPrefab.prefab` | Mine 3D prefab (hidden until triggered) |
-| `Assets/Mine/Mijn.fbx` + materials | Mine mesh and textures |
-| `Assets/TerrainTexture/` | Tile/ground material (`Terrain.mat`) and PBR textures |
-| `Assets/Scenes/SampleScene.unity` | Main (and only) scene |
-| `Assets/Settings/` | URP renderer and render-pipeline assets for PC and Mobile |
-| `Assets/InputSystem_Actions.inputactions` | Input System action map |
-
-### What does NOT exist yet
-
-- **No gameplay scripts** (`Assets/Scripts/` does not exist)
-- No tile prefab or grid setup in the scene
-- No game logic, UI, or camera control scripts
-
----
-
 ## Unity Project Details
 
-- **Engine**: Unity (check `ProjectSettings/ProjectVersion.txt` for exact version)
+- **Engine**: Unity **6000.3.9f1** (Unity 6)
 - **Render Pipeline**: Universal Render Pipeline (URP) v17.3.0
 - **Key packages** (`Packages/manifest.json`):
   - `com.unity.inputsystem` 1.18.0 – new Input System for click/keyboard input
@@ -58,179 +36,147 @@ Full concept specification: [`docs/CONCEPT.md`](docs/CONCEPT.md)
   - `com.unity.render-pipelines.universal` 17.3.0 – URP
   - `com.unity.ugui` 2.0.0 – UI Toolkit / uGUI
   - `com.unity.timeline` 1.8.10 – optional cinematic sequences
-  - `com.unity.modules.particlesystem` – available for mine explosion VFX
+  - `com.unity.modules.particlesystem` – mine explosion VFX
 
 ---
 
-## Architecture – Systems to Implement
+## Repository Structure
 
-All scripts go in `Assets/Scripts/`. Suggested namespace: none (keep flat for simplicity).
+### Assets
 
-### 1. `GameManager.cs`
-**Singleton** that owns overall game state.
+| Path | Description |
+|------|-------------|
+| `Assets/Scripts/` | All 9 gameplay scripts (see Architecture section below) |
+| `Assets/Prefabs/` | `TilePrefab.prefab`, `Character.prefab`, `Flag.prefab`, `Goal.prefab` |
+| `Assets/Character/` | Character FBX models (`IdleSkinned.fbx`, `Walk.fbx`, `Die.fbx`), textures, materials, `AnimatorController.controller` |
+| `Assets/Mine/` | `Mijn.fbx`, `MijnPrefab.prefab`, textures, materials (`Mine.mat`, `MineLamp.mat`) |
+| `Assets/TerrainTexture/` | Tile/ground material (`Terrain.mat`) and PBR textures |
+| `Assets/Materials/` | Additional materials: `Flag.mat`, `Goal.mat`, `Pole.mat` |
+| `Assets/Scenes/SampleScene.unity` | Main (and only) scene – fully configured with all GameObjects and references wired |
+| `Assets/Settings/` | URP renderer and render-pipeline assets for PC and Mobile, volume profiles |
+| `Assets/InputSystem_Actions.inputactions` | Input System action map (Player actions: Move, Look, Attack, etc.) |
 
-Responsibilities:
+### Other
+
+| Path | Description |
+|------|-------------|
+| `docs/CONCEPT.md` | Game design specification |
+| `Packages/manifest.json` | Unity package dependencies |
+| `ProjectSettings/` | Unity project settings |
+
+---
+
+## Architecture – Implemented Systems
+
+All scripts are in `Assets/Scripts/` with no namespace (flat structure).
+
+### 1. `GameManager.cs` – Game State Singleton
 - States: `Setup`, `Playing`, `GameOver`, `Win`
-- Holds reference to grid size setting (width × height)
+- Holds grid size settings (width, height) and mine density
 - Triggers `GridGenerator` to build the grid on game start
-- Listens for player death → transition to `GameOver`
-- Listens for player reaching goal tile → transition to `Win`
-- Controls UI overlays via `UIManager`
+- Listens for player death → `GameOver`, player reaching goal → `Win`
+- Tracks flag count; controls UI overlays via `UIManager`
 
-### 2. `GridGenerator.cs`
-Builds the tile grid at runtime.
+### 2. `GridGenerator.cs` – Grid Builder
+- Instantiates `TilePrefab` in a W×H grid (1 m spacing)
+- Randomly distributes mines (~15–20% density)
+- **Guarantees a mine-free path** from left edge to right edge using BFS; removes blocking mines if needed
+- Calculates `AdjacentMineCount` for every non-mine tile
+- Spawns character on a random left-edge tile; marks a random right-edge tile as the goal
+- Sets up mine prefabs on mine tiles
+- Bakes NavMesh at runtime
+- Exposes `Tile[,] Grid` for coordinate lookups
 
-Responsibilities:
-- Instantiate `Tile` prefabs in a W×H grid (1 m spacing, world origin centered or at 0,0)
-- Randomly distribute mines, ensuring the mine density is reasonable (e.g. 15–20 % of tiles)
-- **Guarantee a mine-free path** from left edge to right edge (use BFS/DFS after mine placement; if no path exists, remove blocking mines)
-- Assign `adjacentMineCount` to every non-mine tile
-- Spawn character on a random left-edge tile; mark a random right-edge tile as the goal
-- Expose a 2D array `Tile[,] Grid` for lookups by coordinate
+### 3. `Tile.cs` – Tile Data & Visuals (MonoBehaviour)
+- Properties: `IsMine`, `IsRevealed`, `IsFlagged`, `IsGoal`, `AdjacentMineCount`, `GridPosition`
+- Visual states via material swapping: hidden (default), revealed clear, revealed numbered (TextMeshPro), revealed mine, flagged
+- `Reveal()` – flips state, triggers flood-fill via `GridGenerator` when `AdjacentMineCount == 0`
+- `Flag()` / `Unflag()` – toggles flag child object
+- `TriggerMine()` – shows mine prefab, triggers explosion, notifies `GameManager`
 
-### 3. `Tile.cs` (MonoBehaviour on each tile GameObject)
-Data and visual state for one tile.
+### 4. `PlayerController.cs` – Input Handler
+- Uses Input System (`Mouse.current`) for left/right click
+- Left-click: raycasts from camera to tile layer → moves character to target tile
+- Right-click: flags/unflags adjacent tiles only
+- Blocks input while character is moving or game is not in `Playing` state
+- On arrival: calls `tile.Reveal()`
 
-Properties:
-- `bool IsMine`
-- `bool IsRevealed`
-- `bool IsFlagged`
-- `int AdjacentMineCount`
-- `Vector2Int GridPosition`
+### 5. `CharacterMover.cs` – NavMesh Movement
+- Uses `NavMeshAgent` to move character to target tile position
+- Drives animator: `Speed = 1` when moving, `Speed = 0` when stopped
+- Events: `OnStartedMoving`, `OnArrived` (used by camera and player controller)
+- Stops movement on mine trigger
 
-Visual states (swap materials or child objects):
-- Hidden (default grey)
-- Revealed – clear (terrain texture)
-- Revealed – numbered (terrain texture + text/decal showing count)
-- Revealed – mine (mine prefab becomes visible + explosion)
-- Flagged (flag indicator)
-
-Methods:
-- `Reveal()` – flip state, trigger flood-fill via `GridGenerator` if count == 0
-- `Flag()` / `Unflag()`
-- `TriggerMine()` – show mine prefab, play explosion particle, notify `GameManager`
-
-### 4. `PlayerController.cs`
-Handles input and character movement.
-
-Responsibilities:
-- Listen for mouse click (via Input System `InputSystem_Actions`) → raycast against tile layer → get `Tile`
-- Validate click: tile must be reachable (not already revealed mine, not out of range for flagging)
-- Hand off movement target to `CharacterMover`
-- After movement completes, call `tile.Reveal()`
-- Flagging: right-click (or designated button) on adjacent tiles calls `tile.Flag()`
-
-### 5. `CharacterMover.cs`
-Moves the character to a target tile using NavMesh.
-
-Responsibilities:
-- Uses `NavMeshAgent` on the character GameObject
-- Sets `destination` to the clicked tile's world position
-- Drives `CharacterAnimator`: set `Speed = 1` when moving, `Speed = 0` when stopped
-- Fires `OnArrived` event when agent reaches destination
-- Fires `OnStartedMoving` event for camera switch
-
-### 6. `CharacterAnimator.cs`
-Thin wrapper around the `Animator` component.
-
-Responsibilities:
+### 6. `CharacterAnimator.cs` – Animator Wrapper
 - `SetSpeed(float v)` → `animator.SetFloat("Speed", v)`
 - `TriggerDeath()` → `animator.SetBool("Death", true)`
+- Uses existing `AnimatorController.controller` with `Speed` (float) and `Death` (bool) parameters
 
-Animator parameters (already set up in `Assets/Character/AnimatorController.controller`):
-- `Speed` (float) – Idle ↔ Walk blend
-- `Death` (bool) – transitions to die animation
+### 7. `CameraController.cs` – Dual Camera System
+- **TopDown mode**: high-angle perspective, full grid visible, active while player is idle (height scales with grid size)
+- **Follow mode**: third-person close-up behind/above character, active while walking
+- Switches triggered by `CharacterMover.OnStartedMoving` / `OnArrived`
+- Smooth blending via Lerp/Slerp
 
-### 7. `CameraController.cs`
-Switches between two virtual cameras (or manually repositions one camera).
-
-Responsibilities:
-- **Top-down mode**: orthographic or high-angle perspective, full grid visible, active while player is idle
-- **Follow mode**: third-person close-up behind/above character, active while character is walking
-- Switch triggered by `CharacterMover.OnStartedMoving` / `OnArrived`
-- Smooth blend between modes (Lerp or Cinemachine if added)
-
-### 8. `UIManager.cs`
-Handles all UI panels.
-
-Responsibilities:
-- **Setup screen**: slider/input for grid width and height (10–100), "Start Game" button
+### 8. `UIManager.cs` – UI Panels
+- **Setup screen**: width/height sliders (10–100), "Start Game" button
 - **HUD**: mine counter, flag counter
-- **Game Over overlay**: shown on player death, "Retry" button
-- **Win overlay**: shown on reaching goal, "Play Again" button
+- **Game Over overlay**: "Retry" button
+- **Win overlay**: "Play Again" button
 - Communicates with `GameManager` for state transitions
 
-### 9. `MineExplosion.cs` (optional, can be part of `Tile.cs`)
-Manages mine reveal sequence.
-
-Responsibilities:
-- Enable the `MijnPrefab` child object on the tile
-- Play a `ParticleSystem` explosion effect
-- Optionally shake the camera
-- Notify `GameManager` of player death after a short delay (animation time)
+### 9. `MineExplosion.cs` – Mine Reveal VFX
+- Enables `MijnPrefab` child object on the tile
+- Creates orange particle explosion effect at runtime
+- Triggers character death animation via `CharacterAnimator.TriggerDeath()` after delay
+- Notifies `GameManager` of player death
 
 ---
 
-## Implementation Steps (in order)
+## Scene Setup (`SampleScene.unity`)
 
-### Step 1 – Project Setup
-- [ ] Create `Assets/Scripts/` directory
-- [ ] Create a `Tile` prefab: a flat 1 m × 1 m quad/plane with a `Tile.cs` component; add child objects for number text (TextMeshPro), mine prefab slot, flag object
-- [ ] Bake NavMesh on a placeholder flat plane to verify AI Navigation works
+The scene is fully configured with:
+- **GameManager** GameObject – singleton with references to GridGenerator, UIManager, PlayerController, CameraController
+- **GridGenerator** – with prefab references and material assignments
+- **PlayerController** – with main camera reference and tile layer mask
+- **CameraController** – with target assignment
+- **UIManager** – with all panel references and button wiring
+- **Main Camera** – configured for raycasting
 
-### Step 2 – GridGenerator
-- [ ] Implement `GridGenerator.cs` with configurable width/height
-- [ ] Implement mine placement with the guaranteed-path algorithm (BFS after placement)
-- [ ] Verify grid spawns correctly in the scene with correct world positions
+---
 
-### Step 3 – Tile Logic
-- [ ] Implement `Tile.cs` with all states and `Reveal()` / `Flag()` / `TriggerMine()`
-- [ ] Implement flood-fill (auto-reveal adjacent clear tiles) when `AdjacentMineCount == 0`
-- [ ] Display adjacent mine count numbers on tiles (TextMeshPro or world-space canvas)
+## Implementation Status
 
-### Step 4 – Character Setup
-- [ ] Create character prefab from existing FBX assets; attach `NavMeshAgent`, `CharacterMover.cs`, `CharacterAnimator.cs`
-- [ ] Verify `AnimatorController.controller` transitions work with `Speed` and `Death` parameters
-- [ ] Test NavMesh movement on the grid
+### Complete
+- [x] Project setup – scripts directory, prefabs, NavMesh
+- [x] GridGenerator with configurable width/height and guaranteed-path algorithm
+- [x] Tile logic with all states, reveal, flood-fill, flagging, mine trigger
+- [x] Character prefab with NavMeshAgent, CharacterMover, CharacterAnimator
+- [x] Player input (left-click to move, right-click to flag, input blocking)
+- [x] Camera system with top-down and follow modes
+- [x] GameManager state machine with full game loop
+- [x] UIManager with setup, HUD, game-over, and win screens
+- [x] Mine reveal sequence with particle explosion and death animation
+- [x] Scene fully wired with all references
 
-### Step 5 – Player Input
-- [ ] Implement `PlayerController.cs` using the existing `InputSystem_Actions` action map
-- [ ] Raycast from camera to tile on left-click → move character
-- [ ] Right-click on adjacent tile → flag/unflag
-- [ ] Block input while character is moving
-
-### Step 6 – Camera System
-- [ ] Implement `CameraController.cs`
-- [ ] Wire up to `CharacterMover` events
-- [ ] Tune top-down height and follow distance
-
-### Step 7 – Game State & UI
-- [ ] Implement `GameManager.cs` singleton with state machine
-- [ ] Implement `UIManager.cs` with setup, HUD, game-over and win screens
-- [ ] Wire up death and win conditions end-to-end
-
-### Step 8 – Mine Reveal & VFX
-- [ ] Implement mine reveal sequence in `Tile.cs` / `MineExplosion.cs`
-- [ ] Use the existing `MijnPrefab.prefab` and a `ParticleSystem` for the explosion
-- [ ] Trigger character death animation via `CharacterAnimator.TriggerDeath()`
-
-### Step 9 – Polish & Tuning
-- [ ] Adjust mine density and grid size defaults
-- [ ] Add sound effects (Unity Audio module is available)
+### Remaining Polish (optional)
+- [ ] Sound effects (Unity Audio module is available)
 - [ ] Camera shake on explosion
-- [ ] Win/loss animation or transition
-- [ ] Test on various grid sizes (10×10, 50×50, 100×100)
+- [ ] Win/loss transition animations
+- [ ] Performance testing on large grid sizes (50×50, 100×100)
+- [ ] Gameplay balance tuning (mine density, grid size defaults)
 
 ---
 
 ## Key Conventions
 
 - **All scripts** → `Assets/Scripts/`
+- **All prefabs** → `Assets/Prefabs/`
 - **Scene** → `Assets/Scenes/SampleScene.unity`
-- **Tile layer** → create a `Tile` layer in Unity for raycasts
-- **NavMesh** → bake on the grid plane; character uses `NavMeshAgent`
-- **URP materials** → use URP/Lit shader; existing materials in `Assets/TerrainTexture/` and `Assets/Mine/` are already URP-compatible
-- **Input** → use the existing `Assets/InputSystem_Actions.inputactions`; add `Point` and `Click` (mouse) + optional `RightClick` actions if not present
+- **Tile layer** → used for raycasts in `PlayerController`
+- **NavMesh** → baked at runtime by `GridGenerator`; character uses `NavMeshAgent`
+- **URP materials** → URP/Lit shader; materials in `Assets/TerrainTexture/` and `Assets/Mine/` are URP-compatible
+- **Input** → `Mouse.current` from Input System for left/right click handling
 
 ---
 
