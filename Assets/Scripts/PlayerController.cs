@@ -62,11 +62,17 @@ public class PlayerController : MonoBehaviour
         if (tile == null) return;
         if (tile.IsRevealed || tile.IsFlagged) return;
 
+        // Only allow movement to adjacent tiles
+        GridGenerator generator = GameManager.Instance.GridGenerator;
+        Tile playerTile = generator.GetTileAtWorldPosition(CharacterMover.transform.position);
+        if (playerTile == null) return;
+        if (!generator.IsAdjacent(playerTile.GridPosition, tile.GridPosition)) return;
+
         // Move character to the tile
         currentTile = tile;
         waitingForArrival = true;
 
-        Vector3 targetPos = GameManager.Instance.GridGenerator.GridToWorldPosition(
+        Vector3 targetPos = generator.GridToWorldPosition(
             tile.GridPosition.x, tile.GridPosition.y);
         CharacterMover.MoveTo(targetPos);
     }

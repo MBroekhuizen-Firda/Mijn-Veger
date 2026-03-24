@@ -31,6 +31,7 @@ public class MineExplosion : MonoBehaviour
         particleObj.transform.localPosition = Vector3.up * 0.5f;
 
         explosionParticles = particleObj.AddComponent<ParticleSystem>();
+        explosionParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
         var main = explosionParticles.main;
         main.duration = 0.5f;
