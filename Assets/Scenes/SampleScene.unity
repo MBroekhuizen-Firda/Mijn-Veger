@@ -633,8 +633,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   Target: {fileID: 0}
   MainCamera: {fileID: 330585545}
-  TopDownHeight: 20
-  TopDownAngle: 90
+  TopDownHeight: 12
+  TopDownAngle: 85
   FollowDistance: 5
   FollowHeight: 3
   FollowAngle: 30

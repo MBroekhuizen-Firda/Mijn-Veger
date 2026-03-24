@@ -4,7 +4,7 @@ using System.Collections;
 public class MineExplosion : MonoBehaviour
 {
     [Header("Settings")]
-    public float ExplosionDelay = 0.5f;
+    public float ExplosionDelay = 0.0f;
     public float ParticleLifetime = 2f;
 
     [Header("Explosion Effect")]
