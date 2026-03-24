@@ -1,0 +1,135 @@
+/* Root */
+:root {
+    -unity-font-definition: initial;
+}
+
+/* Panel base */
+.panel {
+    position: absolute;
+    display: none;
+}
+
+/* Center-aligned overlay panels (Setup, GameOver, Win) */
+.center-panel {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Semi-transparent overlay for GameOver / Win (on top of game) */
+.overlay {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* HUD: anchored to top, no background blocking clicks */
+.hud {
+    width: 100%;
+    height: auto;
+    top: 0;
+    left: 0;
+    padding: 10px;
+    picking-mode: ignore;
+}
+
+.hud-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    picking-mode: ignore;
+}
+
+.hud-text {
+    font-size: 22px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    picking-mode: ignore;
+}
+
+/* Title text */
+.title {
+    font-size: 48px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 30px;
+}
+
+.gameover-title {
+    color: rgb(220, 50, 50);
+}
+
+.win-title {
+    color: rgb(50, 220, 50);
+}
+
+/* Settings group (sliders container) */
+.settings-group {
+    width: 400px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* Slider row */
+.slider-row {
+    margin-bottom: 16px;
+}
+
+.slider-label {
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+    margin-bottom: 6px;
+}
+
+/* Slider styling */
+.game-slider {
+    width: 100%;
+    height: 24px;
+}
+
+.game-slider #unity-dragger {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+}
+
+.game-slider #unity-tracker {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin-top: 9px;
+}
+
+.game-slider #unity-drag-container {
+    height: 24px;
+}
+
+/* Buttons */
+.action-button {
+    width: 200px;
+    height: 50px;
+    font-size: 22px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    background-color: rgb(40, 120, 200);
+    border-radius: 8px;
+    border-width: 0;
+    margin-top: 10px;
+    transition-duration: 0.15s;
+}
+
+.action-button:hover {
+    background-color: rgb(60, 150, 240);
+    scale: 1.05 1.05;
+}
+
+.action-button:active {
+    background-color: rgb(30, 90, 160);
+    scale: 0.97 0.97;
+}
