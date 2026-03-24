@@ -1,6 +1,5 @@
 /* Root */
 :root {
-    -unity-font-definition: initial;
 }
 
 /* Panel base */

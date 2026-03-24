@@ -79,11 +79,14 @@ public class GridGenerator : MonoBehaviour
         // Reveal the start tile
         Grid[StartPosition.x, StartPosition.y].Reveal();
 
+        // Bake NavMesh at runtime (must happen before spawning the character)
+        BakeNavMesh();
+
         // Spawn character
         SpawnCharacter();
 
-        // Bake NavMesh at runtime
-        BakeNavMesh();
+        // Draw grid overlay lines
+        CreateGridOverlay();
     }
 
     void PlaceMines(int mineCount)
@@ -309,6 +312,52 @@ public class GridGenerator : MonoBehaviour
         surface.collectObjects = CollectObjects.All;
         surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
         surface.BuildNavMesh();
+    }
+
+    void CreateGridOverlay()
+    {
+        GameObject overlayParent = new GameObject("GridOverlay");
+        overlayParent.transform.parent = gridParent.transform;
+
+        Material lineMat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+        lineMat.color = new Color(0f, 0f, 0f, 0.4f);
+
+        float lineY = 0.01f;
+        float lineWidth = 0.02f;
+
+        // Vertical lines (along Z axis)
+        for (int x = 0; x <= width; x++)
+        {
+            GameObject lineObj = new GameObject($"VLine_{x}");
+            lineObj.transform.parent = overlayParent.transform;
+            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+            lr.material = lineMat;
+            lr.startWidth = lineWidth;
+            lr.endWidth = lineWidth;
+            lr.positionCount = 2;
+            lr.SetPosition(0, new Vector3(x - 0.5f, lineY, -0.5f));
+            lr.SetPosition(1, new Vector3(x - 0.5f, lineY, height - 0.5f));
+            lr.useWorldSpace = true;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+        }
+
+        // Horizontal lines (along X axis)
+        for (int y = 0; y <= height; y++)
+        {
+            GameObject lineObj = new GameObject($"HLine_{y}");
+            lineObj.transform.parent = overlayParent.transform;
+            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+            lr.material = lineMat;
+            lr.startWidth = lineWidth;
+            lr.endWidth = lineWidth;
+            lr.positionCount = 2;
+            lr.SetPosition(0, new Vector3(-0.5f, lineY, y - 0.5f));
+            lr.SetPosition(1, new Vector3(width - 0.5f, lineY, y - 0.5f));
+            lr.useWorldSpace = true;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+        }
     }
 
     public void FloodFillReveal(Vector2Int position)
